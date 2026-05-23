@@ -1,6 +1,5 @@
 package com.yuyue.model.dto.article;
 
-import com.qcloud.cos.model.ciModel.metaInsight.ImageResult;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -60,6 +59,15 @@ public class ArticleState implements Serializable {
      */
     @Data
     public static class TitleResult implements Serializable {
+        private String mainTitle;
+        private String subTitle;
+    }
+
+    /**
+     * 标题方案
+     */
+    @Data
+    public static class TitleOption implements Serializable {
         private String mainTitle;
         private String subTitle;
     }

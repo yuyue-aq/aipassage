@@ -1,6 +1,7 @@
 package com.yuyue.model.entity;
 
 import com.mybatisflex.annotation.Column;
+import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import lombok.AllArgsConstructor;
@@ -23,7 +24,7 @@ public class Article {
     /**
      * id,主键自增
      */
-    @id(keyType=KeyType.Auto)
+    @Id(keyType = KeyType.Auto)
     private Long id;
 
     /**
@@ -58,52 +59,57 @@ public class Article {
     private String outline;
 
     /**
+     * 标题方案列表（JSON格式）
+     */
+    private String titleOptions;
+
+    /**
      * content,md格式
      */
     private String content;
 
     /**
-     *content with picture
+     * content with picture
      */
     private String fullContent;
-        /**
-         * 封面图 URL
-         */
-        private String coverImage;
+    /**
+     * 封面图 URL
+     */
+    private String coverImage;
 
-        /**
-         * 配图列表（JSON数组）
-         */
-        private String images;
+    /**
+     * 配图列表（JSON数组）
+     */
+    private String images;
 
-        /**
-         * 状态：PENDING/PROCESSING/COMPLETED/FAILED
-         */
-        private String status;
+    /**
+     * 状态：PENDING/PROCESSING/COMPLETED/FAILED
+     */
+    private String status;
 
-        /**
-         * 错误信息
-         */
-        private String errorMessage;
+    /**
+     * 错误信息
+     */
+    private String errorMessage;
 
-        /**
-         * 创建时间
-         */
-        private LocalDateTime createTime;
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
 
-        /**
-         * 完成时间
-         */
-        private LocalDateTime completedTime;
+    /**
+     * 完成时间
+     */
+    private LocalDateTime completedTime;
 
-        /**
-         * 更新时间
-         */
-        private LocalDateTime updateTime;
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
 
-        /**
-         * 是否删除
-         */
-        @Column(isLogicDelete = true)
-        private Integer isDelete;
+    /**
+     * 是否删除
+     */
+    @Column(isLogicDelete = true)
+    private Integer isDelete;
 }
