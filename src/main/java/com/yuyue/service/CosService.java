@@ -1,5 +1,6 @@
 package com.yuyue.service;
 
+
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -9,6 +10,7 @@ import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
 import com.yuyue.config.CosConfig;
+import com.yuyue.model.dto.image.ImageData;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,7 +30,7 @@ import java.util.UUID;
  *
  * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
-//@Service
+@Service
 @Slf4j
 public class CosService {
 
@@ -48,7 +50,31 @@ public class CosService {
         cosClient = new COSClient(cred, clientConfig);
     }
 
+    /**
+     * 上传 ImageData 到 COS（统一入口）
+     * 根据数据类型自动选择上传方式
+     *
+     * @param imageData 图片数据对象
+     * @param folder    文件夹
+     * @return COS 图片 URL，上传失败返回 null
+     */
+    public String uploadImageData(ImageData imageData, String folder) {
+        if (imageData == null || !imageData.isValid()) {
+            log.warn("ImageData 无效，无法上传");
+            return null;
+        }
 
+        try {
+            return switch (imageData.getDataType()) {
+                case BYTES -> uploadBytes(imageData.getBytes(), imageData.getMimeType(), folder);
+                case URL -> uploadFromUrl(imageData.getUrl(), folder);
+                case DATA_URL -> uploadFromDataUrl(imageData, folder);
+            };
+        } catch (Exception e) {
+            log.error("上传 ImageData 到 COS 失败, dataType={}", imageData.getDataType(), e);
+            return null;
+        }
+    }
 
     /**
      * 上传字节数据到 COS
@@ -124,6 +150,22 @@ public class CosService {
         }
     }
 
+    /**
+     * 从 base64 data URL 解码并上传到 COS
+     *
+     * @param imageData ImageData 对象（包含 data URL）
+     * @param folder    文件夹
+     * @return COS 图片 URL
+     */
+    public String uploadFromDataUrl(ImageData imageData, String folder) {
+        byte[] bytes = imageData.getImageBytes();
+        if (bytes == null || bytes.length == 0) {
+            log.warn("解码 data URL 失败，无法上传");
+            return null;
+        }
+
+        return uploadBytes(bytes, imageData.getMimeType(), folder);
+    }
 
     /**
      * 上传图片到 COS（兼容旧接口）
@@ -235,3 +277,4 @@ public class CosService {
                 cosConfig.getBucket(), cosConfig.getRegion(), fileName);
     }
 }
+

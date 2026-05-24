@@ -44,7 +44,7 @@ import static com.yuyue.constant.UserConstant.VIP_ROLE;
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
     @Override
-    public String createArticleTask(String topic, User loginUser) {
+    public String createArticleTask(String topic, String style, List<String> enabledImageMethods, User loginUser) {
         // 生成任务ID
         String taskId = IdUtil.simpleUUID();
 
@@ -118,41 +118,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    public Page<ArticleVO> listArticleByPage(ArticleQueryRequest request, User loginUser) {
-        long current = request.getPageNum();
-        long size = request.getPageSize();
-
-        // 构建查询条件
-        QueryWrapper queryWrapper = QueryWrapper.create()
-                .eq("isDelete", 0)
-                .orderBy("createTime", false);
-
-        // 非管理员只能查看自己的文章
-        if (!ADMIN_ROLE.equals(loginUser.getUserRole())) {
-            queryWrapper.eq("userId", loginUser.getId());
-        } else if (request.getUserId() != null) {
-            queryWrapper.eq("userId", request.getUserId());
-        }
-
-        // 按状态筛选
-        if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
-            queryWrapper.eq("status", request.getStatus());
-        }
-
-        // 分页查询
-        Page<Article> articlePage = this.page(new Page<>(current, size), queryWrapper);
-
-        // 转换为 VO
-        return convertToVOPage(articlePage);
-    }
-
-    @Override
     public boolean deleteArticle(Long id, User loginUser) {
         Article article = this.getById(id);
         ThrowUtils.throwIf(article == null, ErrorCode.NOT_FOUND_ERROR);
 
-        // 校验权限：只能删除自己的文章（管理员除外）
-        checkArticlePermission(article, loginUser);
 
         // 逻辑删除
         return this.removeById(id);

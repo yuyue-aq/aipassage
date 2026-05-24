@@ -40,15 +40,6 @@ public interface ArticleService extends IService<Article> {
 
 
     /**
-     * 分页查询文章列表
-     *
-     * @param request   查询请求
-     * @param loginUser 当前登录用户
-     * @return 分页结果
-     */
-    Page<ArticleVO> listArticleByPage(ArticleQueryRequest request, User loginUser);
-
-    /**
      * 删除文章（带权限校验）
      *
      * @param id        文章ID

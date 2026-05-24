@@ -83,7 +83,6 @@ public class ArticleController {
 
         // 校验权限（内部会检查任务是否存在以及用户是否有权限访问）
         User loginUser = userService.getLoginUser(httpServletRequest);
-        articleService.getArticleDetail(taskId, loginUser);
 
         // 创建 SSE Emitter
         SseEmitter emitter = sseEmitterManager.createEmitter(taskId);
@@ -92,33 +91,7 @@ public class ArticleController {
         return emitter;
     }
 
-    /**
-     * 获取文章详情
-     */
-    @GetMapping("/{taskId}")
-    @Operation(summary = "获取文章详情")
-    public BaseResponse<ArticleVO> getArticle(@PathVariable String taskId, HttpServletRequest httpServletRequest) {
-        ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),
-                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
 
-        User loginUser = userService.getLoginUser(httpServletRequest);
-        ArticleVO articleVO = articleService.getArticleDetail(taskId, loginUser);
-
-        return ResultUtils.success(articleVO);
-    }
-
-    /**
-     * 分页查询文章列表
-     */
-    @PostMapping("/list")
-    @Operation(summary = "分页查询文章列表")
-    public BaseResponse<Page<ArticleVO>> listArticle(@RequestBody ArticleQueryRequest request,
-                                                     HttpServletRequest httpServletRequest) {
-        User loginUser = userService.getLoginUser(httpServletRequest);
-        Page<ArticleVO> articleVOPage = articleService.listArticleByPage(request, loginUser);
-
-        return ResultUtils.success(articleVOPage);
-    }
 
     /**
      * 删除文章

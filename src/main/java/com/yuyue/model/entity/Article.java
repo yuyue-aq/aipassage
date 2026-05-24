@@ -30,12 +30,14 @@ public class Article {
     /**
      * UUID
      */
-    private String taskid;
+    @Column("taskid")
+    private String taskId;
 
     /**
      * userid
      */
-    private String userid;
+    @Column("userid")
+    private Long userId;
 
 
     /**
