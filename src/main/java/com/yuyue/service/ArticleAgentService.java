@@ -155,7 +155,7 @@ public class ArticleAgentService {
             // 调用图片检索服务
             String imageUrl = imageService.searchImage(requirement.getKeywords());
 
-            // 降级策略
+            // 降级策略，解决api调用可能存在的问题，保证流程不中断
             ImageMethodEnum method = imageService.getMethod();
             if (imageUrl == null) {
                 imageUrl = imageService.getFallbackImage(requirement.getPosition());

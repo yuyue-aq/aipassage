@@ -73,6 +73,7 @@ public class PexelsService implements ImageSearchService, ArticleConstant {
                 PEXELS_API_URL,
                 keywords,
                 PEXELS_PER_PAGE,
+                //图片方向
                 PEXELS_ORIENTATION_LANDSCAPE);
     }
 
@@ -82,6 +83,11 @@ public class PexelsService implements ImageSearchService, ArticleConstant {
      * @param responseBody 响应体
      * @param keywords     搜索关键词（用于日志）
      * @return 图片 URL，未找到返回 null
+     * 接收 Pexels 图片接口返回的 JSON 字符串
+     * 解析 JSON
+     * 找到第一张图片
+     * 返回它的大图（large）URL
+     * 如果没找到图片，返回 null 并打警告日志
      */
     private String extractImageUrl(String responseBody, String keywords) {
         JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
