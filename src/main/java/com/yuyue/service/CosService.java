@@ -277,4 +277,3 @@ public class CosService {
                 cosConfig.getBucket(), cosConfig.getRegion(), fileName);
     }
 }
-

@@ -56,5 +56,6 @@ public class ImageRequest {
         }
         return keywords != null && !keywords.isEmpty() ? keywords : prompt;
     }
+
 }
 

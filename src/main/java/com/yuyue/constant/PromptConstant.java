@@ -144,4 +144,5 @@ public interface PromptConstant {
         直接返回完整的 SVG XML 代码，不要有任何解释或其他内容。
         """;
 
+
 }
