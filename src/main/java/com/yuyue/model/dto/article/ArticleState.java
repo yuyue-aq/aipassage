@@ -146,4 +146,23 @@ public class ArticleState implements Serializable {
      */
     private List<String> enabledImageMethods;
 
+    /**
+     * 文章风格
+     */
+    private String style;
+
+    /**
+     * 用户补充描述
+     */
+    private String userDescription;
+
+    /**
+     * 当前阶段
+     */
+    private String phase;
+
+    /**
+     * 标题方案列表（智能体1输出）
+     */
+    private List<TitleOption> titleOptions;
 }

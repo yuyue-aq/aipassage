@@ -13,6 +13,7 @@ import com.yuyue.model.dto.article.ArticleState;
 
 import java.util.List;
 import com.yuyue.model.entity.User;
+import com.yuyue.model.enums.ArticleStyleEnum;
 import com.yuyue.model.vo.ArticleVO;
 import com.yuyue.service.ArticleAsyncService;
 import com.yuyue.service.ArticleService;
@@ -46,31 +47,6 @@ public class ArticleController {
 
     @Resource
     private UserService userService;
-
-
-    /**
-     * 创建文章任务
-     */
-    @PostMapping("/create")
-    @Operation(summary = "创建文章任务")
-    public BaseResponse<String> createArticle(@RequestBody ArticleCreateRequest request, HttpServletRequest httpServletRequest) {
-        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
-        ThrowUtils.throwIf(request.getTopic() == null || request.getTopic().trim().isEmpty(),
-                ErrorCode.PARAMS_ERROR, "选题不能为空");
-
-        User loginUser = userService.getLoginUser(httpServletRequest);
-
-        // 检查并消耗配额 + 创建文章任务（在同一事务中）
-        String taskId = articleService.createArticleTask(
-                request.getTopic(),
-                request.getStyle(),
-                request.getEnabledImageMethods(),
-                loginUser
-        );
-
-
-        return ResultUtils.success(taskId);
-    }
 
     /**
      * SSE 进度推送
@@ -107,6 +83,40 @@ public class ArticleController {
         boolean result = articleService.deleteArticle(deleteRequest.getId(), loginUser);
 
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 创建文章任务
+     */
+    @PostMapping("/create")
+    @Operation(summary = "创建文章任务")
+    public BaseResponse<String> create(@RequestBody ArticleCreateRequest request, HttpServletRequest httpRequest) {
+        ThrowUtils.throwIf(request == null, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(request.getTopic() == null || request.getTopic().trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "选题不能为空");
+        // 校验风格参数（允许为空）
+        ThrowUtils.throwIf(!ArticleStyleEnum.isValid(request.getStyle()),
+                ErrorCode.PARAMS_ERROR, "无效的文章风格");
+
+        User loginUser = userService.getLoginUser(httpRequest);
+
+        // 检查并消耗配额 + 创建文章任务（在同一事务中）
+        String taskId = articleService.createArticleTaskWithQuotaCheck(
+                request.getTopic(),
+                request.getStyle(),
+                request.getEnabledImageMethods(),
+                loginUser
+        );
+
+        // 异步执行（传递风格和配图方式）
+        articleAsyncService.executeArticleGeneration(
+                taskId,
+                request.getTopic(),
+                request.getStyle(),
+                request.getEnabledImageMethods()
+        );
+
+        return ResultUtils.success(taskId);
     }
 
 }

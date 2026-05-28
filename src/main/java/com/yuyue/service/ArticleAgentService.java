@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.yuyue.constant.PromptConstant;
 import com.yuyue.model.dto.article.ArticleState;
 import com.yuyue.model.dto.image.ImageRequest;
+import com.yuyue.model.enums.ArticleStyleEnum;
 import com.yuyue.model.enums.ImageMethodEnum;
 import com.yuyue.model.enums.SseMessageTypeEnum;
 import com.yuyue.utils.GsonUtils;
@@ -89,8 +90,9 @@ public class ArticleAgentService {
      * 智能体1：生成标题
      */
     private void agent1GenerateTitle(ArticleState state) {
-        //调用prompt
-        String prompt= PromptConstant.AGENT1_TITLE_PROMPT.replace("{topic}", state.getTopic());
+        String prompt = PromptConstant.AGENT1_TITLE_PROMPT
+                .replace("{topic}", state.getTopic())
+                + getStylePrompt(state.getStyle());  // 添加风格 Prompt
         //生成
         String content = callLlm(prompt);
         //更改状态
@@ -105,7 +107,8 @@ public class ArticleAgentService {
     private void agent2GenerateOutline(ArticleState state, Consumer<String> streamHandler) {
         String prompt = PromptConstant.AGENT2_OUTLINE_PROMPT
                 .replace("{mainTitle}", state.getTitle().getMainTitle())
-                .replace("{subTitle}", state.getTitle().getSubTitle());
+                .replace("{subTitle}", state.getTitle().getSubTitle())
+                + getStylePrompt(state.getStyle());  // 添加风格 Prompt
 
         String content = callLlmWithStreaming(prompt, streamHandler, SseMessageTypeEnum.AGENT2_STREAMING);
         ArticleState.OutlineResult outlineResult = parseJsonResponse(content, ArticleState.OutlineResult.class, "大纲");
@@ -121,12 +124,35 @@ public class ArticleAgentService {
         String prompt = PromptConstant.AGENT3_CONTENT_PROMPT
                 .replace("{mainTitle}", state.getTitle().getMainTitle())
                 .replace("{subTitle}", state.getTitle().getSubTitle())
-                .replace("{outline}", outlineText);
+                .replace("{outline}", outlineText)
+                + getStylePrompt(state.getStyle());
 
         String content = callLlmWithStreaming(prompt, streamHandler, SseMessageTypeEnum.AGENT3_STREAMING);
         state.setContent(content);
         log.info("智能体3：正文生成成功, length={}", content.length());
     }
+
+    /**
+     * 根据风格获取对应的 Prompt 附加内容
+     */
+    private String getStylePrompt(String style) {
+        if (style == null || style.isEmpty()) {
+            return "";
+        }
+
+        ArticleStyleEnum styleEnum = ArticleStyleEnum.getEnumByValue(style);
+        if (styleEnum == null) {
+            return "";
+        }
+
+        return switch (styleEnum) {
+            case TECH -> PromptConstant.STYLE_TECH_PROMPT;
+            case EMOTIONAL -> PromptConstant.STYLE_EMOTIONAL_PROMPT;
+            case EDUCATIONAL -> PromptConstant.STYLE_EDUCATIONAL_PROMPT;
+            case HUMOROUS -> PromptConstant.STYLE_HUMOROUS_PROMPT;
+        };
+    }
+
 
     /**
      * 智能体4：分析配图需求（在正文中插入占位符）

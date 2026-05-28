@@ -30,4 +30,6 @@ public class ArticleCreateRequest implements Serializable {
     private List<String> enabledImageMethods;
 
     private static final long serialVersionUID = 1L;
+
+
 }

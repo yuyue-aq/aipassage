@@ -17,6 +17,7 @@ import com.yuyue.model.enums.ArticleStatusEnum;
 import com.yuyue.model.vo.ArticleVO;
 import com.yuyue.service.ArticleAgentService;
 import com.yuyue.service.ArticleService;
+import com.yuyue.service.QuotaService;
 import com.yuyue.utils.GsonUtils;
 import com.google.gson.reflect.TypeToken;
 import com.yuyue.service.ArticleService;
@@ -43,6 +44,9 @@ import static com.yuyue.constant.UserConstant.VIP_ROLE;
 @Slf4j
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
+    @Resource
+    private QuotaService  quotaService;
+
     @Override
     public String createArticleTask(String topic, String style, List<String> enabledImageMethods, User loginUser) {
         // 生成任务ID
@@ -61,6 +65,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         log.info("文章任务已创建, taskId={}, userId={}", taskId, loginUser.getId());
         return taskId;
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String createArticleTaskWithQuotaCheck(String topic, String style, List<String> enabledImageMethods, User loginUser) {
+        // 在同一事务中：先扣配额，再创建任务
+        // 如果任务创建失败，配额会自动回滚
+        quotaService.checkAndConsumeQuota(loginUser);
+        return createArticleTask(topic, style, enabledImageMethods, loginUser);
+    }
+
 
     @Override
     public Article getByTaskId(String taskId) {

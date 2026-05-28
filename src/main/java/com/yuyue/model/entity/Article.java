@@ -114,4 +114,25 @@ public class Article {
      */
     @Column(isLogicDelete = true)
     private Integer isDelete;
+
+    /**
+     * 文章风格：tech/emotional/educational/humorous
+     */
+    private String style;
+
+    /**
+     * 用户补充描述
+     */
+    private String userDescription;
+
+    /**
+     * 允许的配图方式列表（JSON格式）
+     */
+    private String enabledImageMethods;
+
+    /**
+     * 当前阶段：PENDING/TITLE_GENERATING/TITLE_SELECTING/OUTLINE_GENERATING/OUTLINE_EDITING/CONTENT_GENERATING
+     */
+    private String phase;
+
 }
