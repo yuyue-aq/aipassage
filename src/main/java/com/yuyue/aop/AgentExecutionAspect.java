@@ -3,6 +3,7 @@ package com.yuyue.aop;
 import com.yuyue.annotation.AgentExecution;
 import com.yuyue.model.dto.article.ArticleState;
 import com.yuyue.model.entity.AgentLog;
+import com.yuyue.service.AgentLogService;
 import com.yuyue.utils.GsonUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
