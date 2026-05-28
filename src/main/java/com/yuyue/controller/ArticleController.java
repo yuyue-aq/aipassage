@@ -12,7 +12,9 @@ import com.yuyue.model.dto.article.*;
 import java.util.List;
 import com.yuyue.model.entity.User;
 import com.yuyue.model.enums.ArticleStyleEnum;
+import com.yuyue.model.vo.AgentExecutionStats;
 import com.yuyue.model.vo.ArticleVO;
+import com.yuyue.service.AgentLogService;
 import com.yuyue.service.ArticleAsyncService;
 import com.yuyue.service.ArticleService;
 import com.yuyue.service.UserService;
@@ -196,6 +198,22 @@ public class ArticleController {
         );
 
         return ResultUtils.success(modifiedOutline);
+    }
+
+    @Resource
+    private AgentLogService agentLogService;
+
+    /**
+     * 获取任务执行日志
+     */
+    @GetMapping("/execution-logs/{taskId}")
+    @Operation(summary = "获取任务执行日志")
+    public BaseResponse<AgentExecutionStats> getExecutionLogs(@PathVariable String taskId) {
+        ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
+
+        AgentExecutionStats stats = agentLogService.getExecutionStats(taskId);
+        return ResultUtils.success(stats);
     }
 
 }

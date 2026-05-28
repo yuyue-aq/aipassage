@@ -25,7 +25,7 @@ mybatis-flex:
   configuration:
     map-underscore-to-camel-case: false
 server:
-  port: 8567
+  port: 64445
   servlet:
     context-path: /api
     # cookie 30 天过期
