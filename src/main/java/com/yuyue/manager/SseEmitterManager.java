@@ -11,6 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.yuyue.constant.ArticleConstant.SSE_RECONNECT_TIME_MS;
 import static com.yuyue.constant.ArticleConstant.SSE_TIMEOUT_MS;
 
+/**
+ * SSE Emitter 管理器
+ *
+ * @author <a href="https://codefather.cn">编程导航学习圈</a>
+ */
 @Component
 @Slf4j
 public class SseEmitterManager {

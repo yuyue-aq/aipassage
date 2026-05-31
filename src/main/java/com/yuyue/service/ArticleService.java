@@ -123,4 +123,13 @@ public interface ArticleService extends IService<Article> {
      */
     List<ArticleState.OutlineSection> aiModifyOutline(String taskId, String modifySuggestion, User loginUser);
 
+    /**
+     * 分页获取文章列表
+     *
+     * @param articleQueryRequest 查询请求
+     * @param loginUser           当前登录用户
+     * @return 文章分页数据
+     */
+    Page<ArticleVO> listArticleByPage(ArticleQueryRequest articleQueryRequest, User loginUser);
+
 }

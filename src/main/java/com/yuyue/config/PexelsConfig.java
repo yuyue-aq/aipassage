@@ -1,19 +1,21 @@
-package com.yuyue.service;
+package com.yuyue.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Pexels 配置
+ *
+ * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
-@Data
-@Component
+@Configuration
 @ConfigurationProperties(prefix = "pexels")
+@Data
 public class PexelsConfig {
 
     /**
-     * Pexels API Key
+     * API Key
      */
     private String apiKey;
 }

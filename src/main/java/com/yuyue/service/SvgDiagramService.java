@@ -7,11 +7,13 @@ import com.yuyue.constant.PromptConstant;
 import com.yuyue.model.dto.image.ImageData;
 import com.yuyue.model.dto.image.ImageRequest;
 import com.yuyue.model.enums.ImageMethodEnum;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -33,6 +35,17 @@ public class SvgDiagramService implements ImageSearchService {
 
     @Resource
     private DashScopeChatModel chatModel;
+
+    @Resource
+    private Environment environment;
+
+    @PostConstruct
+    private void logDashScopeWiring() {
+        String activeProfiles = String.join(",", environment.getActiveProfiles());
+        String apiKey = environment.getProperty("spring.ai.dashscope.api-key");
+        log.info("DashScope wiring check (svg): chatModelPresent={}, activeProfiles={}, apiKeyConfigured={}",
+                chatModel != null, activeProfiles, apiKey != null && !apiKey.isBlank());
+    }
 
     @Override
     public String searchImage(String keywords) {

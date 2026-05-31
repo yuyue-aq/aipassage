@@ -103,6 +103,18 @@
             <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
             <version>1.1.0.0-RC2</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>dashscope-sdk-java</artifactId>
+            <!-- 请将 'the-latest-version' 替换为最新版本号：https://mvnrepository.com/artifact/com.alibaba/dashscope-sdk-java -->
+            <version>2.22.18</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!-- 腾讯云 COS SDK -->
         <dependency>
             <groupId>com.qcloud</groupId>
@@ -144,6 +156,10 @@
             <groupId>com.stripe</groupId>
             <artifactId>stripe-java</artifactId>
             <version>31.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
     </dependencies>
 

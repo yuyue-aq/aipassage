@@ -49,6 +49,18 @@ public class ArticleController {
     private UserService userService;
 
     /**
+     * 文章列表
+     */
+    @PostMapping("/list")
+    @Operation(summary = "获取文章列表")
+    public BaseResponse<Page<ArticleVO>> listArticle(@RequestBody ArticleQueryRequest articleQueryRequest,
+                                                      HttpServletRequest httpServletRequest) {
+        User loginUser = userService.getLoginUser(httpServletRequest);
+        Page<ArticleVO> page = articleService.listArticleByPage(articleQueryRequest, loginUser);
+        return ResultUtils.success(page);
+    }
+
+    /**
      * SSE 进度推送
      */
     @GetMapping("/progress/{taskId}")

@@ -135,36 +135,59 @@ public interface PromptConstant {
      * 智能体4：分析配图需求
      */
     String AGENT4_IMAGE_REQUIREMENTS_PROMPT = """
-            你是一位专业的新媒体编辑,擅长为文章配图。
-            
-            根据以下文章内容,分析配图需求:
+            你是一位专业的新媒体编辑，擅长为文章配图。
+
+            ## 任务
+            根据以下文章内容，分析配图需求，并在正文的合适位置插入配图占位符。
+
             主标题：{mainTitle}
             正文：
             {content}
-            
-            要求:
-            1. 识别需要配图的位置(封面、关键章节等)
-            2. 建议配图数量: 3-5张
-            3. 为每个配图位置生成英文搜索关键词(适合 Pexels 图库检索)
-            4. 关键词要准确、具体,能检索到高质量图片
-            5. sectionTitle 必须与正文中的章节标题完全一致(用于定位插入位置)
-            6. position=1 为封面图,sectionTitle 留空
-            
-            请直接返回 JSON 格式,不要有其他内容:
-            [
-              {
-                "position": 1,
-                "type": "cover",
-                "sectionTitle": "",
-                "keywords": "AI technology office modern"
-              },
-              {
-                "position": 2,
-                "type": "section",
-                "sectionTitle": "章节标题（与正文完全一致）",
-                "keywords": "business success teamwork"
-              }
-            ]
+
+            ## 可用配图方式
+            {availableMethods}
+
+            ## 各配图方式的使用指南
+            {methodUsageGuide}
+
+            ## 要求
+            1. 识别需要配图的位置（封面、关键章节等），建议配图数量：3-5张
+            2. position 从 1 开始递增，position=1 为封面图（sectionTitle 留空，type="cover"）
+            3. 每个正文内的配图 position>1，type="section"，sectionTitle 必须与正文中的章节标题完全一致
+            4. 根据内容为每个配图位置选择合适的 imageSource（从可用配图方式中选择），并按照使用指南填写 keywords 或 prompt
+            5. 为每个配图生成唯一的 placeholderId，格式：{{IMAGE_PLACEHOLDER_N}}（N 对应 position 编号）
+            6. 在 contentWithPlaceholders 中，将每个配图位置对应的原文章段落处插入对应的占位符 {{IMAGE_PLACEHOLDER_N}}
+
+            ## 输出 JSON 格式
+            请直接返回以下 JSON 格式，不要有其他内容（不要包含 ```json 标记）：
+            {
+              "contentWithPlaceholders": "包含占位符的完整正文...",
+              "imageRequirements": [
+                {
+                  "position": 1,
+                  "type": "cover",
+                  "sectionTitle": "",
+                  "keywords": "modern AI technology office",
+                  "imageSource": "PEXELS",
+                  "prompt": "",
+                  "placeholderId": "{{IMAGE_PLACEHOLDER_1}}"
+                },
+                {
+                  "position": 2,
+                  "type": "section",
+                  "sectionTitle": "章节标题（与正文完全一致）",
+                  "keywords": "business team collaboration",
+                  "imageSource": "PEXELS",
+                  "prompt": "",
+                  "placeholderId": "{{IMAGE_PLACEHOLDER_2}}"
+                }
+              ]
+            }
+
+            注意：
+            - 检索类方式（PEXELS、ICONIFY、EMOJI_PACK）：填写 keywords，prompt 留空 ""
+            - 生图类方式（NANO_BANANA、SVG_DIAGRAM）：填写 prompt，keywords 留空 ""
+            - MERMAID：在 prompt 中填写完整的 Mermaid 代码
             """;
 
 

@@ -249,6 +249,49 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return modifiedOutline;
     }
 
+    @Override
+    public Page<ArticleVO> listArticleByPage(ArticleQueryRequest articleQueryRequest, User loginUser) {
+        // 构建查询条件
+        QueryWrapper queryWrapper = QueryWrapper.create();
+
+        // 普通用户只能查看自己的文章，管理员可以查看所有
+        if (!ADMIN_ROLE.equals(loginUser.getUserRole())) {
+            queryWrapper.eq("userid", loginUser.getId());
+        } else if (articleQueryRequest.getUserId() != null) {
+            // 管理员可以指定查看某个用户的文章
+            queryWrapper.eq("userid", articleQueryRequest.getUserId());
+        }
+
+        // 按状态筛选
+        if (articleQueryRequest.getStatus() != null && !articleQueryRequest.getStatus().isEmpty()) {
+            queryWrapper.eq("status", articleQueryRequest.getStatus());
+        }
+
+        // 按选题关键词模糊搜索
+        if (articleQueryRequest.getTopicKeyword() != null && !articleQueryRequest.getTopicKeyword().isEmpty()) {
+            queryWrapper.like("topic", articleQueryRequest.getTopicKeyword());
+        }
+
+        // 排序：默认按创建时间降序
+        queryWrapper.orderBy("createTime", false);
+
+        // 分页查询
+        Page<Article> page = this.page(
+                new Page<>(articleQueryRequest.getPageNum(), articleQueryRequest.getPageSize()),
+                queryWrapper
+        );
+
+        // 转换为 VO 分页
+        Page<ArticleVO> voPage = new Page<>(page.getPageNumber(), page.getPageSize(), page.getTotalRow());
+        if (page.hasRecords()) {
+            voPage.setRecords(page.getRecords().stream()
+                    .map(ArticleVO::objToVo)
+                    .collect(Collectors.toList()));
+        }
+
+        return voPage;
+    }
+
     /**
      * 校验文章权限
      *

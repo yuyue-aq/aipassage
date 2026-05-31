@@ -3,6 +3,7 @@ package com.yuyue.service;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.yuyue.config.PexelsConfig;
 import com.yuyue.constant.ArticleConstant;
 import com.yuyue.model.enums.ImageMethodEnum;
 import lombok.extern.slf4j.Slf4j;
