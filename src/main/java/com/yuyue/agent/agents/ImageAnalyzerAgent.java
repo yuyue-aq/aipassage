@@ -3,7 +3,6 @@ package com.yuyue.agent.agents;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.NodeAction;
-import com.google.gson.reflect.TypeToken;
 import com.yuyue.agent.context.StreamHandlerContext;
 import com.yuyue.constant.PromptConstant;
 import com.yuyue.model.dto.article.ArticleState;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * 配图需求分析 Agent
@@ -62,9 +62,6 @@ public class ImageAnalyzerAgent implements NodeAction {
         
         log.info("ImageAnalyzerAgent 开始执行: mainTitle={}, enabledMethods={}", mainTitle, enabledMethods);
 
-        // 获取流式处理器，发送进度通知
-        Consumer<String> streamHandler = StreamHandlerContext.get();
-
         // 构建可用配图方式说明
         String availableMethods = buildAvailableMethodsDescription(enabledMethods);
         // 构建各配图方式的详细使用指南（只包含允许的方式）
@@ -77,11 +74,6 @@ public class ImageAnalyzerAgent implements NodeAction {
                 .replace("{availableMethods}", availableMethods)
                 .replace("{methodUsageGuide}", methodUsageGuide);
 
-        // 发送进度通知：正在分析配图需求
-        if (streamHandler != null) {
-            streamHandler.accept(SseMessageTypeEnum.AGENT4_STREAMING.getStreamingPrefix() + "正在分析配图需求...\n\n");
-        }
-
         log.info("ImageAnalyzerAgent 开始调用 LLM 分析配图需求，正文长度={}", content.length());
 
         String responseContent;
@@ -89,6 +81,7 @@ public class ImageAnalyzerAgent implements NodeAction {
             // 调用 LLM（同步阻塞，大 prompt 可能耗时较长）
             ChatResponse response = chatModel.call(new Prompt(new UserMessage(prompt)));
             responseContent = response.getResult().getOutput().getText();
+            log.info("ImageAnalyzerAgent LLM 调用完成，响应长度={}", responseContent.length());
         } catch (Exception e) {
             log.error("ImageAnalyzerAgent LLM 调用失败, mainTitle={}", mainTitle, e);
             // 失败时返回空结果，不阻塞后续流程
@@ -116,13 +109,23 @@ public class ImageAnalyzerAgent implements NodeAction {
                 enabledMethods
         );
         
-        log.info("ImageAnalyzerAgent 执行完成: 配图需求数量={}, 验证后数量={}, 已在正文中插入占位符", 
-                agent4Result.getImageRequirements().size(), validatedRequirements.size());
-        
-        // 返回结果：contentWithPlaceholders、content（更新为包含占位符）、imageRequirements
+        log.info("ImageAnalyzerAgent 执行完成: 配图需求数量={}, 验证后数量={}, 已在正文中插入占位符",
+                agent4Result.getImageRequirements() != null ? agent4Result.getImageRequirements().size() : 0,
+                validatedRequirements.size());
+
+        // 发送配图分析完成消息，让前端实时更新步骤
+        Consumer<String> streamHandler = StreamHandlerContext.get();
+        if (streamHandler != null) {
+            streamHandler.accept(SseMessageTypeEnum.AGENT4_COMPLETE.getValue());
+        }
+
+        // 返回结果：contentWithPlaceholders（若为null则回退到原始content）、content（更新为包含占位符）、imageRequirements
+        String contentWithPlaceholders = agent4Result.getContentWithPlaceholders() != null
+                ? agent4Result.getContentWithPlaceholders()
+                : content;
         return Map.of(
-                OUTPUT_CONTENT_WITH_PLACEHOLDERS, agent4Result.getContentWithPlaceholders(),
-                INPUT_CONTENT, agent4Result.getContentWithPlaceholders(), // 更新 content 为包含占位符的版本，传给下游节点
+                OUTPUT_CONTENT_WITH_PLACEHOLDERS, contentWithPlaceholders,
+                INPUT_CONTENT, contentWithPlaceholders, // 更新 content 为包含占位符的版本，传给下游节点
                 OUTPUT_IMAGE_REQUIREMENTS, validatedRequirements
         );
     }
@@ -207,7 +210,10 @@ public class ImageAnalyzerAgent implements NodeAction {
             case "NANO_BANANA" -> """
                     - NANO_BANANA: 提供详细的英文生图提示词(prompt)，描述场景、风格、细节。keywords 留空。""";
             case "MERMAID" -> """
-                    - MERMAID: 在 prompt 字段生成完整的 Mermaid 代码（如流程图、架构图）。keywords 留空。""";
+                    - MERMAID: 在 prompt 字段生成纯 Mermaid 代码（如 flowchart LR...、graph TD...）。
+                      keywords 留空。注意：直接以 flowchart/graph 关键字开头，不要添加任何前缀文字或 markdown 标记。
+                      节点语法必须符合 Mermaid 规范：方形 A[文字]、圆角 A(文字)、菱形 A{文字}。
+                      节点文字中不要嵌套括号，用逗号代替。例如：用 A[查询天气, 城市北京] 而不是 A[查询天气(city=Beijing)]""";
             case "ICONIFY" -> """
                     - ICONIFY: 提供英文图标关键词(keywords)，如：check、arrow、star、heart。prompt 留空。""";
             case "EMOJI_PACK" -> """

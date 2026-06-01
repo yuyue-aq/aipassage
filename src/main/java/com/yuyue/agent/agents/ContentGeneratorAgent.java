@@ -81,7 +81,12 @@ public class ContentGeneratorAgent implements NodeAction {
         String content = callLlmWithStreaming(prompt, streamHandler);
         
         log.info("ContentGeneratorAgent 执行完成: 正文长度={}", content.length());
-        
+
+        // 发送正文生成完成消息，让前端实时更新步骤
+        if (streamHandler != null) {
+            streamHandler.accept(SseMessageTypeEnum.AGENT3_COMPLETE.getValue());
+        }
+
         return Map.of(OUTPUT_CONTENT, content);
     }
 

@@ -37,5 +37,12 @@ public class MermaidConfig {
      * 命令执行超时时间（毫秒）
      */
     private Long timeout = 30000L;
+
+    /**
+     * Puppeteer 使用的 Chrome/Chromium 可执行文件路径
+     * 留空则使用 mermaid-cli 自带的 puppeteer 浏览器
+     * Windows 示例: C:/Program Files/Google/Chrome/Application/chrome.exe
+     */
+    private String puppeteerExecutablePath;
 }
 

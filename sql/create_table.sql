@@ -8,7 +8,7 @@ SET CHARACTER SET utf8mb4;
 -- 切换库
 use article;
 
--- 用户表（基础字段，quota 和 vipTime 由增量脚本添加）
+-- 用户表（基础字段，quota 由增量脚本添加）
 create table if not exists user
 (
     id           bigint auto_increment comment 'id' primary key,

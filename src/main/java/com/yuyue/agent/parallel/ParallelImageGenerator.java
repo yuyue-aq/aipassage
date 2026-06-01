@@ -87,7 +87,12 @@ public class ParallelImageGenerator implements NodeAction {
         });
         
         log.info("ParallelImageGenerator 执行完成: 成功生成 {} 张图片", allImages.size());
-        
+
+        // 发送配图生成完成消息，让前端实时更新步骤
+        if (streamHandler != null) {
+            streamHandler.accept(SseMessageTypeEnum.AGENT5_COMPLETE.getValue());
+        }
+
         return Map.of(OUTPUT_IMAGES, allImages);
     }
 

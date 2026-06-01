@@ -28,6 +28,9 @@ public class NanoBananaService implements ImageSearchService {
     @Resource
     private NanoBananaConfig nanoBananaConfig;
 
+    @Resource
+    private Client nanoBananaClient;
+
     @Override
     public String searchImage(String keywords) {
         // 此方法已废弃，请使用 getImageData()
@@ -49,60 +52,51 @@ public class NanoBananaService implements ImageSearchService {
      */
     public ImageData generateImageData(String prompt) {
         try {
-            // 使用 Builder 显式设置 API Key
-            Client genaiClient = Client.builder()
-                    .apiKey(nanoBananaConfig.getApiKey())
+            // 构建图片配置
+            ImageConfig.Builder imageConfigBuilder = ImageConfig.builder()
+                    .aspectRatio(nanoBananaConfig.getAspectRatio());
+
+            // Gemini 3 Pro Image 支持更高分辨率
+            String model = nanoBananaConfig.getModel();
+            if (model != null && model.contains("gemini-3-pro")) {
+                imageConfigBuilder.imageSize(nanoBananaConfig.getImageSize());
+            }
+
+            // 构建生成配置
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .responseModalities("TEXT", "IMAGE")
+                    .imageConfig(imageConfigBuilder.build())
                     .build();
 
-            try {
-                // 构建图片配置
-                ImageConfig.Builder imageConfigBuilder = ImageConfig.builder()
-                        .aspectRatio(nanoBananaConfig.getAspectRatio());
+            log.info("Nano Banana 开始生成图片, model={}, prompt={}", model, prompt);
 
-                // Gemini 3 Pro Image 支持更高分辨率
-                String model = nanoBananaConfig.getModel();
-                if (model != null && model.contains("gemini-3-pro")) {
-                    imageConfigBuilder.imageSize(nanoBananaConfig.getImageSize());
-                }
+            // 调用 Gemini API 生成图片（使用共享的线程安全 Client）
+            GenerateContentResponse response = nanoBananaClient.models.generateContent(
+                    model != null ? model : "gemini-2.5-flash-image",
+                    prompt,
+                    config);
 
-                // 构建生成配置
-                GenerateContentConfig config = GenerateContentConfig.builder()
-                        .responseModalities("TEXT", "IMAGE")
-                        .imageConfig(imageConfigBuilder.build())
-                        .build();
+            // 从响应中提取图片数据
+            if (response.parts() != null) {
+                for (Part part : response.parts()) {
+                    if (part.inlineData().isPresent()) {
+                        var blob = part.inlineData().get();
+                        if (blob.data().isPresent()) {
+                            byte[] imageBytes = blob.data().get();
+                            String mimeType = blob.mimeType().orElse("image/png");
 
-                log.info("Nano Banana 开始生成图片, model={}, prompt={}", model, prompt);
+                            log.info("Nano Banana 图片生成成功, size={} bytes, mimeType={}",
+                                    imageBytes.length, mimeType);
 
-                // 调用 Gemini API 生成图片
-                GenerateContentResponse response = genaiClient.models.generateContent(
-                        model != null ? model : "gemini-2.5-flash-image",
-                        prompt,
-                        config);
-
-                // 从响应中提取图片数据
-                if (response.parts() != null) {
-                    for (Part part : response.parts()) {
-                        if (part.inlineData().isPresent()) {
-                            var blob = part.inlineData().get();
-                            if (blob.data().isPresent()) {
-                                byte[] imageBytes = blob.data().get();
-                                String mimeType = blob.mimeType().orElse("image/png");
-
-                                log.info("Nano Banana 图片生成成功, size={} bytes, mimeType={}",
-                                        imageBytes.length, mimeType);
-
-                                return ImageData.fromBytes(imageBytes, mimeType);
-                            }
+                            return ImageData.fromBytes(imageBytes, mimeType);
                         }
                     }
                 }
-
-                log.warn("Nano Banana 未生成图片, prompt={}", prompt);
-                return null;
-
-            } finally {
-                genaiClient.close();
             }
+
+            log.warn("Nano Banana 未生成图片, prompt={}", prompt);
+            return null;
+
         } catch (Exception e) {
             log.error("Nano Banana 生成图片异常, prompt={}", prompt, e);
             return null;

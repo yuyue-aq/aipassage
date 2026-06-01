@@ -58,7 +58,7 @@ public class ContentMergerAgent implements NodeAction {
         String fullContent = mergeImagesIntoContent(content, images);
         
         log.info("ContentMergerAgent 执行完成: 完整内容长度={}", fullContent.length());
-        
+
         return Map.of(OUTPUT_FULL_CONTENT, fullContent);
     }
 

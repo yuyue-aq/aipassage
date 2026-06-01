@@ -187,7 +187,9 @@ public interface PromptConstant {
             注意：
             - 检索类方式（PEXELS、ICONIFY、EMOJI_PACK）：填写 keywords，prompt 留空 ""
             - 生图类方式（NANO_BANANA、SVG_DIAGRAM）：填写 prompt，keywords 留空 ""
-            - MERMAID：在 prompt 中填写完整的 Mermaid 代码
+            - MERMAID：在 prompt 中填写纯 Mermaid 代码，直接以 flowchart/graph/sequenceDiagram 等关键字开头，不要加任何前缀文字。
+              节点语法必须符合 Mermaid 规范：方形 A[文字]、圆角 A(文字)、菱形 A{文字}。
+              节点文字中不要嵌套括号，用逗号代替。例如：用 A[查询天气, 城市北京] 而不是 A[查询天气(city=Beijing)]
             """;
 
 

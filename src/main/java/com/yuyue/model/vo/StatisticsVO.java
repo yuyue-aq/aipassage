@@ -61,11 +61,6 @@ public class StatisticsVO implements Serializable {
     private Long totalUserCount;
 
     /**
-     * VIP 用户数
-     */
-    private Long vipUserCount;
-
-    /**
      * 配额总使用量
      */
     private Long quotaUsed;

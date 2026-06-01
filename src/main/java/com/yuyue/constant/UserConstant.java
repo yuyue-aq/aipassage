@@ -24,11 +24,6 @@ public interface UserConstant {
      */
     String ADMIN_ROLE = "admin";
 
-    /**
-     * VIP 角色
-     */
-    String VIP_ROLE = "vip";
-    
     // endregion
 
     //  region 配额

@@ -8,6 +8,7 @@ import com.yuyue.exception.ErrorCode;
 import com.yuyue.exception.ThrowUtils;
 import com.yuyue.manager.SseEmitterManager;
 import com.yuyue.model.dto.article.*;
+import com.yuyue.model.entity.Article;
 
 import java.util.List;
 import com.yuyue.model.entity.User;
@@ -58,6 +59,27 @@ public class ArticleController {
         User loginUser = userService.getLoginUser(httpServletRequest);
         Page<ArticleVO> page = articleService.listArticleByPage(articleQueryRequest, loginUser);
         return ResultUtils.success(page);
+    }
+
+    /**
+     * 获取文章详情
+     */
+    @GetMapping("/{taskId}")
+    @Operation(summary = "获取文章详情")
+    public BaseResponse<ArticleVO> getArticle(@PathVariable String taskId, HttpServletRequest httpServletRequest) {
+        ThrowUtils.throwIf(taskId == null || taskId.trim().isEmpty(),
+                ErrorCode.PARAMS_ERROR, "任务ID不能为空");
+
+        User loginUser = userService.getLoginUser(httpServletRequest);
+        Article article = articleService.getByTaskId(taskId);
+        ThrowUtils.throwIf(article == null, ErrorCode.NOT_FOUND_ERROR, "文章不存在");
+
+        // 校验权限：只能查看自己的文章
+        ThrowUtils.throwIf(!article.getUserId().equals(loginUser.getId()),
+                ErrorCode.NO_AUTH_ERROR, "无权限查看该文章");
+
+        ArticleVO articleVO = ArticleVO.objToVo(article);
+        return ResultUtils.success(articleVO);
     }
 
     /**

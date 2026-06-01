@@ -198,27 +198,39 @@ public class ArticleAgentService {
                 .replace("{availableMethods}", availableMethods)
                 .replace("{methodUsageGuide}", methodUsageGuide);
 
-        String rawContent = callLlm(prompt);
-        // 清理 LLM 响应中可能的 markdown 代码块标记
-        String cleanedContent = cleanJsonResponse(rawContent);
-        ArticleState.Agent4Result agent4Result = parseJsonResponse(
-                cleanedContent,
-                ArticleState.Agent4Result.class,
-                "配图需求"
-        );
+        try {
+            String rawContent = callLlm(prompt);
+            // 清理 LLM 响应中可能的 markdown 代码块标记
+            String cleanedContent = cleanJsonResponse(rawContent);
+            ArticleState.Agent4Result agent4Result = parseJsonResponse(
+                    cleanedContent,
+                    ArticleState.Agent4Result.class,
+                    "配图需求"
+            );
 
-        // 更新正文为包含占位符的版本
-        state.setContent(agent4Result.getContentWithPlaceholders());
+            // 更新正文为包含占位符的版本（若为null则保留原文）
+            if (agent4Result.getContentWithPlaceholders() != null) {
+                state.setContent(agent4Result.getContentWithPlaceholders());
+            } else {
+                log.warn("智能体4：contentWithPlaceholders 为 null，保留原始正文");
+            }
 
-        // 验证并过滤配图需求，确保所有 imageSource 都在允许列表中
-        List<ArticleState.ImageRequirement> validatedRequirements = validateAndFilterImageRequirements(
-                agent4Result.getImageRequirements(),
-                state.getEnabledImageMethods()
-        );
+            // 验证并过滤配图需求，确保所有 imageSource 都在允许列表中
+            List<ArticleState.ImageRequirement> validatedRequirements = validateAndFilterImageRequirements(
+                    agent4Result.getImageRequirements(),
+                    state.getEnabledImageMethods()
+            );
 
-        state.setImageRequirements(validatedRequirements);
-        log.info("智能体4：配图需求分析成功, count={}, validated={}, 已在正文中插入占位符",
-                agent4Result.getImageRequirements().size(), validatedRequirements.size());
+            state.setImageRequirements(validatedRequirements);
+            log.info("智能体4：配图需求分析成功, count={}, validated={}, 已在正文中插入占位符",
+                    agent4Result.getImageRequirements() != null ? agent4Result.getImageRequirements().size() : 0,
+                    validatedRequirements.size());
+        } catch (Exception e) {
+            log.error("智能体4：配图需求分析失败，跳过配图，保留原始正文, taskId={}", state.getTaskId(), e);
+            // 失败时不阻塞整个流程：保留原始正文，设置空的配图需求
+            state.setImageRequirements(new ArrayList<>());
+            state.setImages(new ArrayList<>());
+        }
     }
 
     /**
@@ -446,7 +458,10 @@ public class ArticleAgentService {
             case "NANO_BANANA" -> """
                     - NANO_BANANA: 提供详细的英文生图提示词(prompt)，描述场景、风格、细节。keywords 留空。""";
             case "MERMAID" -> """
-                    - MERMAID: 在 prompt 字段生成完整的 Mermaid 代码（如流程图、架构图）。keywords 留空。""";
+                    - MERMAID: 在 prompt 字段生成纯 Mermaid 代码（如 flowchart LR...、graph TD...）。
+                      keywords 留空。注意：直接以 flowchart/graph 关键字开头，不要添加任何前缀文字或 markdown 标记。
+                      节点语法必须符合 Mermaid 规范：方形 A[文字]、圆角 A(文字)、菱形 A{文字}。
+                      节点文字中不要嵌套括号，用逗号代替。例如：用 A[查询天气, 城市北京] 而不是 A[查询天气(city=Beijing)]""";
             case "ICONIFY" -> """
                     - ICONIFY: 提供英文图标关键词(keywords)，如：check、arrow、star、heart。prompt 留空。""";
             case "EMOJI_PACK" -> """

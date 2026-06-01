@@ -80,9 +80,6 @@ public class StatisticsServiceImpl implements StatisticsService {
         // 总用户数
         Long totalUserCount = countTotalUsers();
 
-        // VIP 用户数
-        Long vipUserCount = countVipUsers();
-
         // 配额使用情况（总配额 - 剩余配额）
         Long quotaUsed = calculateQuotaUsed();
 
@@ -95,7 +92,6 @@ public class StatisticsServiceImpl implements StatisticsService {
                 .avgDurationMs(avgDurationMs)
                 .activeUserCount(activeUserCount)
                 .totalUserCount(totalUserCount)
-                .vipUserCount(vipUserCount)
                 .quotaUsed(quotaUsed)
                 .build();
 
@@ -198,15 +194,6 @@ public class StatisticsServiceImpl implements StatisticsService {
      */
     private Long countTotalUsers() {
         return userMapper.selectCountByQuery(QueryWrapper.create());
-    }
-
-    /**
-     * 统计 VIP 用户数
-     */
-    private Long countVipUsers() {
-        QueryWrapper queryWrapper = QueryWrapper.create()
-                .eq("userRole", UserConstant.VIP_ROLE);
-        return userMapper.selectCountByQuery(queryWrapper);
     }
 
     /**

@@ -243,23 +243,20 @@ public class ArticleAgentOrchestrator {
                 } else if (content != null) {
                     state.setContent(content);
                 }
-                streamHandler.accept(SseMessageTypeEnum.AGENT3_COMPLETE.getValue());
-                
+
                 if (imageRequirements != null) {
                     state.setImageRequirements(imageRequirements);
-                    streamHandler.accept(SseMessageTypeEnum.AGENT4_COMPLETE.getValue());
                 }
-                
+
                 if (images != null) {
                     state.setImages(images);
-                    streamHandler.accept(SseMessageTypeEnum.AGENT5_COMPLETE.getValue());
                 }
-                
+
                 if (fullContent != null) {
                     state.setFullContent(fullContent);
                     streamHandler.accept(SseMessageTypeEnum.MERGE_COMPLETE.getValue());
                 }
-                
+
                 log.info("阶段3（多智能体编排）：正文+配图生成完成, 正文长度={}, 图片数={}",
                         contentWithPlaceholders != null ? contentWithPlaceholders.length() : (content != null ? content.length() : 0),
                         images != null ? images.size() : 0);

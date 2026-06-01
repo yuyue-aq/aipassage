@@ -35,21 +35,28 @@ public class SseEmitterManager {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
 
         // 设置超时回调
+        // 使用 remove(key, value) 防止旧连接的回调误删新连接的 emitter
         emitter.onTimeout(() -> {
             log.warn("SSE 连接超时, taskId={}", taskId);
-            emitterMap.remove(taskId);
+            emitterMap.remove(taskId, emitter);
         });
 
         // 设置完成回调
         emitter.onCompletion(() -> {
             log.info("SSE 连接完成, taskId={}", taskId);
-            emitterMap.remove(taskId);
+            emitterMap.remove(taskId, emitter);
         });
 
         // 设置错误回调
         emitter.onError((e) -> {
-            log.error("SSE 连接错误, taskId={}", taskId, e);
-            emitterMap.remove(taskId);
+            // 客户端断开（ClientAbortException / IOException）是正常行为
+            if (e instanceof IOException
+                    || e.getClass().getName().contains("ClientAbortException")) {
+                log.warn("SSE 连接断开（客户端主动关闭）, taskId={}", taskId);
+            } else {
+                log.error("SSE 连接错误, taskId={}", taskId, e);
+            }
+            emitterMap.remove(taskId, emitter);
         });
 
         emitterMap.put(taskId, emitter);
@@ -76,9 +83,11 @@ public class SseEmitterManager {
                     .data(message)
                     .reconnectTime(SSE_RECONNECT_TIME_MS));
             log.debug("SSE 消息发送成功, taskId={}, message={}", taskId, message);
-        } catch (IOException e) {
-            log.error("SSE 消息发送失败, taskId={}", taskId, e);
-            emitterMap.remove(taskId);
+        } catch (Exception e) {
+            // 客户端主动断开连接是正常行为，不记录完整堆栈
+            log.warn("SSE 消息发送失败（客户端可能已断开）, taskId={}, reason={}",
+                    taskId, e.getMessage());
+            // 不在此处移除 emitter，由 onError/onCompletion 回调统一清理
         }
     }
 
@@ -98,7 +107,7 @@ public class SseEmitterManager {
             emitter.complete();
             log.info("SSE 连接已完成, taskId={}", taskId);
         } catch (Exception e) {
-            log.error("SSE 连接完成失败, taskId={}", taskId, e);
+            log.warn("SSE 连接完成失败（客户端可能已断开）, taskId={}", taskId);
         } finally {
             emitterMap.remove(taskId);
         }

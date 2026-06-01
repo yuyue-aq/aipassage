@@ -1,6 +1,7 @@
 package com.yuyue.service;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.RuntimeUtil;
 import cn.hutool.system.SystemUtil;
 import com.yuyue.config.MermaidConfig;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import static com.yuyue.constant.ArticleConstant.PICSUM_URL_TEMPLATE;
 
@@ -59,13 +62,18 @@ public class MermaidService implements ImageSearchService {
             return null;
         }
 
+        // 清理 LLM 可能添加的额外文字前缀和 markdown 代码块标记
+        String cleanedCode = cleanMermaidCode(mermaidCode);
+        log.debug("Mermaid 原始代码: {}", mermaidCode);
+        log.debug("Mermaid 清理后: {}", cleanedCode);
+
         File tempInputFile = null;
         File tempOutputFile = null;
 
         try {
             // 创建临时输入文件
             tempInputFile = FileUtil.createTempFile("mermaid_input_", ".mmd", true);
-            FileUtil.writeUtf8String(mermaidCode, tempInputFile);
+            FileUtil.writeUtf8String(cleanedCode, tempInputFile);
 
             // 创建临时输出文件
             String outputExtension = "." + mermaidConfig.getOutputFormat();
@@ -116,35 +124,51 @@ public class MermaidService implements ImageSearchService {
     /**
      * 调用 Mermaid CLI 转换为图片
      */
-    private void convertMermaidToImage(File inputFile, File outputFile) {
-        try {
-            // 根据操作系统选择命令
-            String command = SystemUtil.getOsInfo().isWindows() ? "mmdc.cmd" : mermaidConfig.getCliCommand();
+    private void convertMermaidToImage(File inputFile, File outputFile) throws Exception {
+        // 根据操作系统选择命令
+        String command = SystemUtil.getOsInfo().isWindows() ? "mmdc.cmd" : mermaidConfig.getCliCommand();
 
-            // 构建命令行参数
-            String cmdLine = String.format("%s -i %s -o %s -b %s",
-                    command,
-                    inputFile.getAbsolutePath(),
-                    outputFile.getAbsolutePath(),
-                    mermaidConfig.getBackgroundColor()
-            );
+        // 构建命令行参数
+        ProcessBuilder pb = new ProcessBuilder(
+                command,
+                "-i", inputFile.getAbsolutePath(),
+                "-o", outputFile.getAbsolutePath(),
+                "-b", mermaidConfig.getBackgroundColor()
+        );
 
-            // 如果配置了宽度，添加宽度参数
-            if (mermaidConfig.getWidth() != null && mermaidConfig.getWidth() > 0) {
-                cmdLine += " -w " + mermaidConfig.getWidth();
-            }
-
-            log.info("执行 Mermaid CLI 命令: {}", cmdLine);
-
-            // 执行命令（带超时）
-            String result = RuntimeUtil.execForStr(cmdLine);
-
-            log.debug("Mermaid CLI 执行结果: {}", result);
-
-        } catch (Exception e) {
-            log.error("执行 Mermaid CLI 失败", e);
-            throw new RuntimeException("Mermaid CLI 执行失败: " + e.getMessage(), e);
+        // 如果配置了宽度，添加宽度参数
+        if (mermaidConfig.getWidth() != null && mermaidConfig.getWidth() > 0) {
+            pb.command().add("-w");
+            pb.command().add(String.valueOf(mermaidConfig.getWidth()));
         }
+
+        // 如果配置了 Puppeteer Chrome 路径，设置环境变量
+        String puppeteerPath = mermaidConfig.getPuppeteerExecutablePath();
+        if (puppeteerPath != null && !puppeteerPath.isBlank()) {
+            pb.environment().put("PUPPETEER_EXECUTABLE_PATH", puppeteerPath);
+        }
+
+        log.info("执行 Mermaid CLI 命令: {}", String.join(" ", pb.command()));
+
+        Process process = pb.start();
+
+        // 等待命令执行完成（带超时）
+        boolean finished = process.waitFor(mermaidConfig.getTimeout(), TimeUnit.MILLISECONDS);
+        if (!finished) {
+            process.destroyForcibly();
+            throw new RuntimeException("Mermaid CLI 执行超时 (" + mermaidConfig.getTimeout() + "ms)");
+        }
+
+        int exitCode = process.exitValue();
+        String stdout = IoUtil.read(process.getInputStream(), StandardCharsets.UTF_8);
+        String stderr = IoUtil.read(process.getErrorStream(), StandardCharsets.UTF_8);
+
+        if (exitCode != 0) {
+            log.error("Mermaid CLI 执行失败, exitCode={}, stderr={}", exitCode, stderr);
+            throw new RuntimeException("Mermaid CLI 执行失败 (exitCode=" + exitCode + "): " + stderr);
+        }
+
+        log.debug("Mermaid CLI 执行结果: {}", stdout);
     }
 
     @Override
@@ -155,6 +179,58 @@ public class MermaidService implements ImageSearchService {
     @Override
     public String getFallbackImage(int position) {
         return String.format(PICSUM_URL_TEMPLATE, position);
+    }
+
+    /**
+     * 清理 LLM 生成的 Mermaid 代码，去除可能的前缀文字和 markdown 标记
+     * <p>
+     * LLM 经常会在 Mermaid 代码前添加描述性文字（如 "Mermaid flowchart code:"），
+     * 或用 markdown 代码块包裹。此方法提取纯 Mermaid 语法代码。
+     *
+     * @param rawCode LLM 原始输出
+     * @return 清理后的纯 Mermaid 代码
+     */
+    private String cleanMermaidCode(String rawCode) {
+        String code = rawCode.trim();
+
+        // 1. 去除 markdown 代码块标记: ```mermaid ... ``` 或 ``` ... ```
+        if (code.startsWith("```")) {
+            int firstNewline = code.indexOf('\n');
+            if (firstNewline > 0) {
+                code = code.substring(firstNewline + 1);
+            }
+            code = code.trim();
+            int lastBackticks = code.lastIndexOf("```");
+            if (lastBackticks >= 0) {
+                code = code.substring(0, lastBackticks);
+            }
+            code = code.trim();
+        }
+
+        // 2. 去除常见的 LLM 文字前缀，提取以 Mermaid 关键字开头的部分
+        // Mermaid 图表类型关键字
+        String[] mermaidKeywords = {
+                "flowchart", "graph", "sequenceDiagram", "classDiagram",
+                "stateDiagram", "erDiagram", "gantt", "pie", "gitGraph",
+                "mindmap", "timeline", "journey", "quadrantChart",
+                "sankey", "xychart", "block", "packet"
+        };
+
+        for (String keyword : mermaidKeywords) {
+            int idx = code.indexOf(keyword);
+            if (idx > 0) {
+                // 找到了关键字，从关键字位置开始截取
+                // 但要确保它前面是空格或换行（避免误匹配变量名等）
+                char before = code.charAt(idx - 1);
+                if (before == ' ' || before == '\n' || before == '\r' || before == '\t' || before == ':' || before == '：') {
+                    log.info("Mermaid 代码检测到关键字 '{}'，去除前缀: {}", keyword, code.substring(0, idx).trim());
+                    code = code.substring(idx).trim();
+                    break;
+                }
+            }
+        }
+
+        return code;
     }
 
     @Override

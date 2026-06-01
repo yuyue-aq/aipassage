@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import com.yuyue.model.enums.ImageMethodEnum;
 
 import static com.yuyue.constant.UserConstant.ADMIN_ROLE;
-import static com.yuyue.constant.UserConstant.VIP_ROLE;
 
 /**
  * 文章服务实现类
@@ -60,6 +59,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setTaskId(taskId);
         article.setUserId(loginUser.getId());
         article.setTopic(topic);
+        article.setStyle(style);
+        // 保存用户选择的配图方式（为 null 或空表示支持所有方式）
+        if (enabledImageMethods != null && !enabledImageMethods.isEmpty()) {
+            article.setEnabledImageMethods(GsonUtils.toJson(enabledImageMethods));
+        }
         article.setStatus(ArticleStatusEnum.PENDING.getValue());
         article.setCreateTime(LocalDateTime.now());
 

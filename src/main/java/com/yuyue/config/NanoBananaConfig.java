@@ -42,5 +42,15 @@ public class NanoBananaConfig {
      * 支持: image/jpeg, image/png
      */
     private String outputMimeType = "image/png";
+
+    /**
+     * HTTP 代理主机（国内网络访问 Gemini API 需要）
+     */
+    private String proxyHost;
+
+    /**
+     * HTTP 代理端口
+     */
+    private Integer proxyPort;
 }
 

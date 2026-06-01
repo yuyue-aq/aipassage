@@ -61,6 +61,7 @@ mermaid:
   output-format: svg  # 输出格式（svg/png/pdf）
   width: 1200  # 图片宽度（像素）
   timeout: 30000  # 命令执行超时时间（毫秒）
+  puppeteer-executable-path:  # Chrome/Chromium 路径（留空则使用 mermaid-cli 自带浏览器，Windows 示例: C:/Program Files/Google/Chrome/Application/chrome.exe）
 
 # Iconify 图标库配置
 iconify:
