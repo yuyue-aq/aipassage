@@ -9,7 +9,6 @@ import lombok.Getter;
  * - isAiGenerated: 是否为 AI 生图方式（决定使用 prompt 还是 keywords）
  * - isFallback: 是否为降级方案
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Getter
 public enum ImageMethodEnum {
@@ -48,12 +47,6 @@ public enum ImageMethodEnum {
      * Picsum 随机图片（降级方案）
      */
     PICSUM("PICSUM", "Picsum 随机图片", false, true);
-
-    // ============ 扩展示例 ============
-    // DALL_E("DALL_E", "DALL-E AI 生图", true, false),
-    // MIDJOURNEY("MIDJOURNEY", "Midjourney AI 生图", true, false),
-    // UNSPLASH("UNSPLASH", "Unsplash 图库", false, false),
-    // STABLE_DIFFUSION("STABLE_DIFFUSION", "Stable Diffusion AI 生图", true, false),
 
     /**
      * 方法值

@@ -10,7 +10,6 @@ import static com.yuyue.constant.ArticleConstant.SVG_DEFAULT_WIDTH;
 /**
  * SVG 概念示意图生成配置
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Configuration
 @ConfigurationProperties(prefix = "svg-diagram")

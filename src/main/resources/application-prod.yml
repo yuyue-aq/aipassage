@@ -29,13 +29,12 @@ pexels:
   api-key: ${PEXELS_API_KEY:}
 
 # Nano Banana API 配置（可选）
-nano:
-  banana:
-    api-key: ${NANO_BANANA_API_KEY:}
+nano-banana:
+  api-key: ${NANO_BANANA_API_KEY:}
 
 # 腾讯云 COS 配置（可选）
-tencent:
-  cos:
+cos:
+  client:
     secret-id: ${TENCENT_COS_SECRET_ID:}
     secret-key: ${TENCENT_COS_SECRET_KEY:}
     region: ${TENCENT_COS_REGION:ap-nanjing}

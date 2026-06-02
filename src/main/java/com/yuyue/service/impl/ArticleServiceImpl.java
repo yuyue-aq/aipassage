@@ -20,7 +20,6 @@ import com.yuyue.service.ArticleService;
 import com.yuyue.service.QuotaService;
 import com.yuyue.utils.GsonUtils;
 import com.google.gson.reflect.TypeToken;
-import com.yuyue.service.ArticleService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,6 @@ import static com.yuyue.constant.UserConstant.ADMIN_ROLE;
 /**
  * 文章服务实现类
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Service
 @Slf4j

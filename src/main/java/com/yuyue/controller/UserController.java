@@ -32,7 +32,6 @@ import java.util.List;
 /**
  * 用户控制层
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @RestController
 @RequestMapping("/user")

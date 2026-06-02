@@ -5,7 +5,6 @@ import com.yuyue.model.entity.User;
 /**
  * 配额服务接口
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 public interface QuotaService {
 

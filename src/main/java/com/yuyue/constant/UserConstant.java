@@ -3,7 +3,6 @@ package com.yuyue.constant;
 /**
  * 用户常量
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 public interface UserConstant {
 

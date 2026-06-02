@@ -14,7 +14,6 @@ import java.net.URI;
  * Nano Banana (Gemini) Client 配置
  * 创建线程安全的共享 GenAI Client，支持 HTTP 代理
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Configuration
 @Slf4j

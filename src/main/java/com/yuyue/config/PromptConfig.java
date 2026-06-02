@@ -13,7 +13,6 @@ import java.util.Map;
  * Prompt 配置类
  * 支持通过配置文件覆盖默认 Prompt
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Configuration
 @ConfigurationProperties(prefix = "prompt")

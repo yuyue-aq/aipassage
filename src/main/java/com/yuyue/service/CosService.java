@@ -28,7 +28,6 @@ import java.util.UUID;
 /**
  * 腾讯云 COS 服务
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Service
 @Slf4j

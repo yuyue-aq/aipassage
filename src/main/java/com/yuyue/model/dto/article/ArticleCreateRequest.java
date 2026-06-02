@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * 创建文章请求
  *
- * @author <a href="https://codefather.cn">编程导航学习圈</a>
  */
 @Data
 public class ArticleCreateRequest implements Serializable {
