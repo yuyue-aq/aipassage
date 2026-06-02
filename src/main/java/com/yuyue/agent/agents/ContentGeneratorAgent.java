@@ -9,7 +9,6 @@ import com.yuyue.model.dto.article.ArticleState;
 import com.yuyue.model.enums.ArticleStyleEnum;
 import com.yuyue.model.enums.SseMessageTypeEnum;
 import com.yuyue.utils.GsonUtils;
-import com.yuyue.utils.GsonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
