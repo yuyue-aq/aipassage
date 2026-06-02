@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import static com.yuyue.constant.ArticleConstant.PICSUM_URL_TEMPLATE;
@@ -230,7 +231,75 @@ public class MermaidService implements ImageSearchService {
             }
         }
 
-        return code;
+        // 3. 丢弃无关前导行（例如 [blocks]）并定位首个 Mermaid 关键字行
+        String[] lines = code.split("\\R");
+        int start = 0;
+        while (start < lines.length) {
+            String line = lines[start].trim();
+            if (line.isEmpty()) {
+                start++;
+                continue;
+            }
+            if (line.matches("^\\[[^\\]]+\\]\\s*$")) {
+                log.info("Mermaid 代码检测到标题行，已忽略: {}", line);
+                start++;
+                continue;
+            }
+            break;
+        }
+
+        int keywordLine = -1;
+        for (int i = start; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+            if (line.matches("^(flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap|timeline|journey|quadrantChart|sankey|xychart|block|packet)\\b.*")) {
+                keywordLine = i;
+                break;
+            }
+        }
+
+        if (keywordLine >= 0) {
+            if (keywordLine > 0) {
+                log.info("Mermaid 代码去除前导行: {}", String.join(" ", Arrays.copyOfRange(lines, 0, keywordLine)).trim());
+            }
+            code = String.join("\n", Arrays.copyOfRange(lines, keywordLine, lines.length)).trim();
+            return code;
+        }
+
+        if (start > 0) {
+            code = String.join("\n", Arrays.copyOfRange(lines, start, lines.length)).trim();
+        }
+
+        return sanitizeMermaidLabels(code);
+    }
+
+    /**
+     * 将节点标签中的双引号替换为单引号，避免 flowchart 语法解析异常。
+     */
+    private String sanitizeMermaidLabels(String code) {
+        StringBuilder sb = new StringBuilder(code.length());
+        boolean inBracketLabel = false;
+        for (int i = 0; i < code.length(); i++) {
+            char ch = code.charAt(i);
+            if (ch == '[') {
+                inBracketLabel = true;
+                sb.append(ch);
+                continue;
+            }
+            if (ch == ']') {
+                inBracketLabel = false;
+                sb.append(ch);
+                continue;
+            }
+            if (inBracketLabel && ch == '"') {
+                sb.append('\'');
+                continue;
+            }
+            sb.append(ch);
+        }
+        return sb.toString();
     }
 
     @Override
@@ -248,4 +317,3 @@ public class MermaidService implements ImageSearchService {
         }
     }
 }
-
