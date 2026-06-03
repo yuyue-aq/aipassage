@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(value = "Article", camelToUnderline = false)
+@Table(value = "article", camelToUnderline = false)
 public class Article {
     @Serial
     private static final long serialVersionUID = 1L;
