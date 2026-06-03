@@ -1,0 +1,6 @@
+.claude
+.idea
+.mvn/**/*.jar
+target
+.gitattributes
+.gitignore
