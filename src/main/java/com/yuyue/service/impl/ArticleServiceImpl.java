@@ -58,7 +58,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setUserId(loginUser.getId());
         article.setTopic(topic);
         article.setStyle(style);
-        // 保存用户选择的配图方式（为 null 或空表示支持所有方式）
+        // 保存用户选择的配图方式（为 null 或空表示不配图）
         if (enabledImageMethods != null && !enabledImageMethods.isEmpty()) {
             article.setEnabledImageMethods(GsonUtils.toJson(enabledImageMethods));
         }

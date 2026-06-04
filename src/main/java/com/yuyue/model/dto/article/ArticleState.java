@@ -142,7 +142,7 @@ public class ArticleState implements Serializable {
     }
 
     /**
-     * 允许的配图方式列表（为空表示支持所有方式）
+     * 允许的配图方式列表（为空表示不配图）
      */
     private List<String> enabledImageMethods;
 

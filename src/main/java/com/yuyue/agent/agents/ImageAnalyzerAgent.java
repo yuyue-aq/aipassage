@@ -134,8 +134,9 @@ public class ImageAnalyzerAgent implements NodeAction {
      * 构建可用配图方式说明
      */
     private String buildAvailableMethodsDescription(List<String> enabledMethods) {
+        // 如果为空或 null，表示不配图
         if (enabledMethods == null || enabledMethods.isEmpty()) {
-            return getAllMethodsDescription();
+            return "   - 不需要配图：用户未选择任何配图方式，请不要为文章添加任何配图。imageRequirements 返回空数组 []。";
         }
 
         StringBuilder sb = new StringBuilder();
@@ -183,10 +184,13 @@ public class ImageAnalyzerAgent implements NodeAction {
      * 构建配图方式的详细使用指南（只包含允许的方式）
      */
     private String buildMethodUsageGuide(List<String> enabledMethods) {
-        // 如果没有限制，返回所有方式的使用指南
-        List<String> methodsToInclude = (enabledMethods == null || enabledMethods.isEmpty())
-                ? List.of("PEXELS", "NANO_BANANA", "MERMAID", "ICONIFY", "EMOJI_PACK", "SVG_DIAGRAM")
-                : enabledMethods;
+        // 如果没有选择任何配图方式，返回不配图的指令
+        if (enabledMethods == null || enabledMethods.isEmpty()) {
+            return "用户未选择任何配图方式，请将 imageRequirements 设为空数组 []，不要添加任何配图。";
+        }
+
+        // 只包含允许的方式
+        List<String> methodsToInclude = enabledMethods;
 
         StringBuilder sb = new StringBuilder();
         
@@ -257,8 +261,10 @@ public class ImageAnalyzerAgent implements NodeAction {
             List<ArticleState.ImageRequirement> requirements,
             List<String> enabledMethods) {
         
+        // 如果用户没有选择任何配图方式，不生成配图
         if (enabledMethods == null || enabledMethods.isEmpty()) {
-            return requirements;
+            log.info("用户未选择任何配图方式，跳过配图生成");
+            return new ArrayList<>();
         }
 
         List<ArticleState.ImageRequirement> validatedRequirements = new ArrayList<>();
