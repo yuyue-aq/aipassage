@@ -41,19 +41,29 @@ RUN chmod +x ./mvnw \
 COPY ["./src", "./src"]
 RUN ./mvnw -s "${mvn_settings_dest}" clean package -DskipTests
 
-FROM node:24-slim
+FROM node:24
 
 ARG java_runtime_dir
 
-#RUN sed -i 's|deb.debian.org|mirrors.tencent.com|g' /etc/apt/sources.list.d/debian.sources
 ENV JAVA_HOME="/opt/java/openjdk"
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 COPY --from=builder ["${java_runtime_dir}", "${JAVA_HOME}"]
 
+ARG PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+ARG PUPPETEER_SKIP_DOWNLOAD="true"
+ENV MERMAID_PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
+ENV PUPPETEER_DANGEROUS_NO_SANDBOX="true"
+
 RUN java -version \
 && node -v \
 && npm config set registry https://mirrors.cloud.tencent.com/npm/ \
-&& npm install -g @mermaid-js/mermaid-cli
+&& npm install -g @mermaid-js/mermaid-cli \
+&& sed -i 's/deb.debian.org/mirrors.cloud.tencent.com/g' /etc/apt/sources.list.d/debian.sources \
+&& apt-get update && apt-get install -y \
+chromium \
+fonts-liberation fonts-noto-cjk \
+--no-install-recommends \
+&& rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
