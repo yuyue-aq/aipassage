@@ -5,7 +5,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.9</version>
+        <!-- Use Spring Boot stable version, not SNAPSHOT -->
+        <version>3.5.14</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.yuyue</groupId>
@@ -15,6 +16,8 @@
     <description>AI文章创作器</description>
     <properties>
         <java.version>21</java.version>
+        <!-- Specify Flyway version 12.7.0 so that it can support MySQL 8.4 LTS -->
+        <flyway.version>12.7.0</flyway.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Web -->
