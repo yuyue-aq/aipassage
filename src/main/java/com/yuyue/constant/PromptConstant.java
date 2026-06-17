@@ -78,36 +78,36 @@ public interface PromptConstant {
      * AI 修改大纲 Prompt
      */
     String AI_MODIFY_OUTLINE_PROMPT = """
-        你是一位专业的文章策划师,擅长根据用户反馈优化文章结构。
-        
-        当前文章信息：
-        主标题：{mainTitle}
-        副标题：{subTitle}
-        
-        当前大纲：
-        {currentOutline}
-        
-        用户修改建议：
-        {modifySuggestion}
-        
-        要求：
-        1. 根据用户的修改建议，调整大纲结构
-        2. 保持大纲的逻辑性和完整性
-        3. 如果用户建议删除某章节，则删除；建议增加则增加；建议修改则修改
-        4. 保持 JSON 格式不变
-        5. 章节序号自动重新排序
-        
-        请直接返回修改后的 JSON 格式大纲，不要有其他内容：
-        {
-          "sections": [
+            你是一位专业的文章策划师,擅长根据用户反馈优化文章结构。
+            
+            当前文章信息：
+            主标题：{mainTitle}
+            副标题：{subTitle}
+            
+            当前大纲：
+            {currentOutline}
+            
+            用户修改建议：
+            {modifySuggestion}
+            
+            要求：
+            1. 根据用户的修改建议，调整大纲结构
+            2. 保持大纲的逻辑性和完整性
+            3. 如果用户建议删除某章节，则删除；建议增加则增加；建议修改则修改
+            4. 保持 JSON 格式不变
+            5. 章节序号自动重新排序
+            
+            请直接返回修改后的 JSON 格式大纲，不要有其他内容：
             {
-              "section": 1,
-              "title": "章节标题",
-              "points": ["要点1", "要点2"]
+              "sections": [
+                {
+                  "section": 1,
+                  "title": "章节标题",
+                  "points": ["要点1", "要点2"]
+                }
+              ]
             }
-          ]
-        }
-        """;
+            """;
 
     /**
      * 智能体3：生成正文
@@ -135,55 +135,75 @@ public interface PromptConstant {
      * 智能体4：分析配图需求
      */
     String AGENT4_IMAGE_REQUIREMENTS_PROMPT = """
-            你是一位专业的新媒体编辑，擅长为文章配图。
-
-            ## 任务
-            根据以下文章内容，分析配图需求，并在正文的合适位置插入配图占位符。
-
+            你是一位专业的新媒体编辑,擅长为文章配图。
+            
+            根据以下文章内容,分析配图需求,并在正文中插入图片占位符:
             主标题：{mainTitle}
             正文：
             {content}
-
-            ## 可用配图方式
+            
+            【重要】可用的配图方式（请严格只从以下方式中选择，禁止使用未列出的方式）：
             {availableMethods}
-
-            ## 各配图方式的使用指南
+            
+            各配图方式的使用要求：
             {methodUsageGuide}
-
-            ## 要求
-            1. 识别需要配图的位置（封面、关键章节等），建议配图数量：3-5张
-            2. position 从 1 开始递增，position=1 为封面图（sectionTitle 留空，type="cover"）
-            3. 每个正文内的配图 position>1，type="section"，sectionTitle 必须与正文中的章节标题完全一致
-            4. 根据内容为每个配图位置选择合适的 imageSource（从可用配图方式中选择），并按照使用指南填写 keywords 或 prompt
-            5. 为每个配图生成唯一的 placeholderId，格式：{{IMAGE_PLACEHOLDER_N}}（N 对应 position 编号）
-            6. 在 contentWithPlaceholders 中，将每个配图位置对应的原文章段落处插入对应的占位符 {{IMAGE_PLACEHOLDER_N}}
-
-            ## 输出 JSON 格式
-            请直接返回以下 JSON 格式，不要有其他内容（不要包含 ```json 标记）：
+            
+            通用要求:
+            1. 识别需要配图的位置(封面、关键章节、段落之间等)
+            2. 根据文章内容和结构灵活决定配图数量，避免过多或过少
+            3. **在正文中插入占位符**：使用以下两种格式
+               - 普通图片占位符：{{IMAGE_PLACEHOLDER_N}}，其中 N 为配图序号（1, 2, 3...），必须独占一行
+               - Icon 占位符：{{ICON_PLACEHOLDER_N}}，可以放在文字行内任意位置（用于 ICONIFY 类型）
+               - 注意：position=1 的封面图不需要占位符，不要放在正文中
+               - 其他配图占位符可以放在任意合适位置（章节标题后、段落之间、列表项中、文字行内等）
+            4. **imageSource 字段必须且只能是上述可用配图方式之一，不要使用其他值**
+            5. placeholderId 必须与正文中插入的占位符完全一致
+            6. position=1 为封面图
+            
+            请直接返回 JSON 格式,不要有其他内容:
             {
-              "contentWithPlaceholders": "包含占位符的完整正文...",
+              "contentWithPlaceholders": "",
               "imageRequirements": [
                 {
                   "position": 1,
                   "type": "cover",
                   "sectionTitle": "",
-                  "keywords": "modern AI technology office",
-                  "imageSource": "PEXELS",
-                  "prompt": "",
-                  "placeholderId": "{{IMAGE_PLACEHOLDER_1}}"
+                  "imageSource": "NANO_BANANA",
+                  "keywords": "",
+                  "prompt": "A modern minimalist illustration of AI technology concept, featuring abstract neural network patterns with blue and purple gradient colors, clean design suitable for article cover, 16:9 aspect ratio",
+                  "placeholderId": ""
                 },
                 {
                   "position": 2,
                   "type": "section",
-                  "sectionTitle": "章节标题（与正文完全一致）",
-                  "keywords": "business team collaboration",
+                  "sectionTitle": "章节标题1",
                   "imageSource": "PEXELS",
+                  "keywords": "business success teamwork office",
                   "prompt": "",
+                  "placeholderId": "{{IMAGE_PLACEHOLDER_1}}"
+                },
+                {
+                  "position": 3,
+                  "type": "inline",
+                  "sectionTitle": "",
+                  "imageSource": "ICONIFY",
+                  "keywords": "check circle",
+                  "prompt": "",
+                  "placeholderId": "{{ICON_PLACEHOLDER_1}}"
+                },
+                {
+                  "position": 4,
+                  "type": "section",
+                  "sectionTitle": "章节标题2",
+                  "imageSource": "MERMAID",
+                  "keywords": "",
+                  "prompt": "flowchart TB\\\\n    A[用户请求] --> B[负载均衡]\\\\n    B --> C[应用服务器]",
                   "placeholderId": "{{IMAGE_PLACEHOLDER_2}}"
                 }
               ]
             }
-
+            ""\";
+            
             注意：
             - 检索类方式（PEXELS、ICONIFY、EMOJI_PACK）：填写 keywords，prompt 留空 ""
             - 生图类方式（NANO_BANANA、SVG_DIAGRAM）：填写 prompt，keywords 留空 ""
